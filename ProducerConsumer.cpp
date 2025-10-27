@@ -69,6 +69,7 @@ void log_msg(const string &s) {
 }
 
 // Bounded buffer put (monitor-style): waits while full
+// Enforces mutual exclusion so only one thread can modify buffer at a time
 void buffer_put(int item) {
     pthread_mutex_lock(&buffer_mutex);
     while ((int)buffer.size() >= QUEUE_CAPACITY) {
@@ -82,6 +83,7 @@ void buffer_put(int item) {
 }
 
 // Bounded buffer get (monitor-style): waits while empty
+// Enforces mutual exclusion so only one thread can modify buffer at a time
 int buffer_get() {
     pthread_mutex_lock(&buffer_mutex);
     while (buffer.empty()) {
@@ -227,6 +229,7 @@ int main() {
 
     // Send one poison pill per consumer. Use buffer_put (which blocks if full),
     // thus following the same monitor protocol as normal items.
+    //Poison pills are used to terminate the consumers. It makes sure no threads remain blocked
     for (int i = 0; i < NUM_CONSUMERS; ++i) {
         buffer_put(POISON_PILL);
     }
