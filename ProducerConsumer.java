@@ -1,3 +1,19 @@
+/**
+ * ProducerConsumer.java -- simple program to run multi-threaded consumers and producers
+ *
+ * T. Brenes -Code from ChatGPT
+ * 10/21/25
+ * CSC420 F25
+ */
+
+
+/**
+ * The ArrayBlockingQueue has atomic and thread safe versions of put() and take() which means
+ * no two threads could modify the queue at the same time
+ */
+
+//Test to see if documentation is showing
+
 import java.util.concurrent.*;
 import java.util.*;
 
@@ -11,13 +27,17 @@ public class ProducerConsumer {
     // Poison pill to signal termination
     private static final int POISON_PILL = Integer.MIN_VALUE;
 
-    public static void main(String[] args) throws InterruptedException {
+   public static void main(String[] args) throws InterruptedException {
+        //ArrayBlockingQueue automatically handles mutual exclusion. It makes producers wait if queue is full
+        //and makes consumers wait if it's empty doing so with an internal lock
+       //Because of that, there are no explicit wait or signal calls because it does it all under the hood.
         BlockingQueue<Integer> queue = new ArrayBlockingQueue<>(QUEUE_CAPACITY);
         List<Thread> threads = new ArrayList<>();
 
         long startTime = System.currentTimeMillis();
 
         // --- Producers ---
+       //Each producer runs in its own thread, prodces something, then sleeps to act like it's busy working.
         for (int i = 0; i < NUM_PRODUCERS; i++) {
             int id = i;
             Thread producer = new Thread(() -> {
@@ -43,6 +63,7 @@ public class ProducerConsumer {
         }
 
         // --- Consumers ---
+       //Each consumer also runs in its own thread just constantly calling take() to eat until killed off
         for (int i = 0; i < NUM_CONSUMERS; i++) {
             int id = i;
             Thread consumer = new Thread(() -> {
@@ -77,6 +98,8 @@ public class ProducerConsumer {
         }
 
         // Send poison pills (one per consumer)
+       //Poison pill kills consumers when the producers are done producing items so they're not infinitely waiting
+       // for something to consume.
         System.out.println("\nAll producers finished. Sending poison pills...");
         for (int i = 0; i < NUM_CONSUMERS; i++) {
             queue.put(POISON_PILL);
